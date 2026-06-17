@@ -1,0 +1,25 @@
+skills/caveman-compress/scripts/validate.py
+  s_1ac41999a245e3::t_0973f8d636b1c1 31
+skills/caveman-compress/scripts/compress.py
+  s_1ac41999a245e3::t_0973f8d636b1c1 222-240,268,322-323,332,350,359
+tests/test_compress_safety.py
+  s_1ac41999a245e3::t_0973f8d636b1c1 27,37,47,57,67,84,88,91-112
+skills/caveman-compress/scripts/detect.py
+  s_1ac41999a245e3::t_0973f8d636b1c1 79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "9378e5f9b9b772bbf05b78f15f7575758d3f8951",
+  "prompts": {},
+  "sessions": {
+    "s_1ac41999a245e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b57e7144-5966-436e-a761-baf1a91f59a2",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "RISHAV DEWAN <rishavdewan10@gmail.com>"
+    }
+  }
+}
