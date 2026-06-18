@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import List
 
@@ -220,20 +221,29 @@ Return ONLY the fixed compressed file. No explanation.
 
 
 def _atomic_write(path: Path, text: str) -> None:
-    """Write text to path atomically via a sibling temp file + rename.
+    """Write text to path atomically via a unique sibling temp file + rename.
 
     Prevents truncation-to-zero-bytes when a write fails mid-way (e.g. a
     charmap error on Windows). The rename is atomic on POSIX; on Windows it
     is near-atomic (NTFS moves are transactional within the same volume).
+
+    Uses a uniquely-named temp file in the same directory (same filesystem,
+    required for atomic rename) rather than a fixed .tmp suffix — avoids
+    clobbering unrelated *.tmp files and handles the edge case where the
+    source path itself ends in .tmp.
     """
-    tmp = path.with_suffix(".tmp")
     try:
-        tmp.write_text(text, encoding="utf-8")
+        fd, tmp_str = tempfile.mkstemp(dir=path.parent, prefix=path.stem + ".", suffix=".tmp")
+        tmp = Path(tmp_str)
+        try:
+            os.write(fd, text.encode("utf-8"))
+        finally:
+            os.close(fd)
         tmp.replace(path)
     except Exception:
         try:
             tmp.unlink()
-        except OSError:
+        except (OSError, UnboundLocalError):
             pass
         raise
 
@@ -346,8 +356,9 @@ def compress_file(filepath: Path) -> bool:
             print(f"   - {err}")
 
         if attempt == MAX_RETRIES - 1:
-            # Restore original on failure
-            filepath.write_text(original_text, encoding="utf-8")
+            # Restore from the verified on-disk backup atomically so a
+            # failed restore write can't leave the file truncated to 0 bytes.
+            _atomic_write(filepath, backup_path.read_text(encoding="utf-8"))
             backup_path.unlink(missing_ok=True)
             print("❌ Failed after retries — original restored")
             return False
